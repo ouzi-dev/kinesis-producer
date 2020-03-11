@@ -33,7 +33,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 
 	var userRecordsDataPutSz = &metric{
 		ID:          "userRecordsDataPutSz",
-		Name:        "user_records_data_put_bytes_sum",
+		Name:        "user_records_data_put_bytes",
 		Description: "Bytes in the logical user records were received by the KPL core for put operations.",
 		Args:        []string{"StreamName"},
 		Type:        "summary_vec",
@@ -49,7 +49,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 
 	var kinesisRecordsDataPutSz = &metric{
 		ID:          "kinesisRecordsDataPutSz",
-		Name:        "kinesis_records_data_put_bytes_sum",
+		Name:        "kinesis_records_data_put_bytes",
 		Description: "Bytes in the Kinesis Data Streams records.",
 		Args:        []string{"StreamName"},
 		Type:        "summary_vec",
@@ -73,7 +73,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 
 	var retriesPerRecordSum = &metric{
 		ID:          "retriesPerRecordSum",
-		Name:        "retries_per_record_sum",
+		Name:        "retries_per_record",
 		Description: "Number of retries performed per kinesis record. Zero is emitted for records that succeed in one try.",
 		Args:        []string{"StreamName"},
 		Type:        "summary_vec",
@@ -97,7 +97,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 
 	var userRecordsPerKinesisRecordSum = &metric{
 		ID:          "userRecordsPerKinesisRecordSum",
-		Name:        "user_records_per_kinesis_record_sum",
+		Name:        "user_records_per_kinesis_record",
 		Description: "The number of logical user records aggregated into a single Kinesis Data Streams record.",
 		Args:        []string{"StreamName"},
 		Type:        "summary_vec",
@@ -105,7 +105,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 
 	var kinesisRecordsPerPutRecordsRequestSum = &metric{
 		ID:          "kinesisRecordsPerPutRecordsRequestSum",
-		Name:        "kinesis_records_per_put_records_request_sum",
+		Name:        "kinesis_records_per_put_records_request",
 		Description: "The number of Kinesis Data Streams records aggregated into a single PutRecordsRequest.",
 		Args:        []string{"StreamName"},
 		Type:        "summary_vec",
