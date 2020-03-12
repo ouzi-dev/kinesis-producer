@@ -180,7 +180,7 @@ func (p *Producer) loop() {
 	tick := time.NewTicker(p.FlushInterval)
 
 	flush := func(msg string) {
-		elapsed := float64(time.Since(start) / time.Millisecond)
+		elapsed := float64(time.Since(start)) / float64(time.Millisecond)
 		p.metrics.bufferingTimeDur.WithLabelValues(p.Config.StreamName).Observe(elapsed)
 		p.semaphore.acquire()
 		go p.flush(buf, msg)
@@ -270,7 +270,7 @@ func (p *Producer) flush(records []*kinesis.PutRecordsRequestEntry, reason strin
 			StreamName: &p.StreamName,
 			Records:    records,
 		})
-		elapsed := float64(time.Since(start) / time.Millisecond)
+		elapsed := float64(time.Since(start)) / float64(time.Millisecond)
 		p.metrics.requestTimeDur.WithLabelValues(p.Config.StreamName).Observe(elapsed)
 
 		if err != nil {
