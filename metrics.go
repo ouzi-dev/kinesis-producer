@@ -8,6 +8,9 @@ import (
 
 const systemName = "go_kinesis_producer"
 
+var timeMillisecondBuckets = []float64{.01, .1, .25, .5, 1, 2.5, 5, 10, 100, 1000, 10000, 60000}
+var sizeByteBuckets = []float64{1, 16, 64, 256, 512, 1024, 16384, 65536, 262144, 1048576, 4194304}
+
 type prometheusMetrics struct {
 	userRecordsPutCnt                     *prometheus.CounterVec
 	userRecordsDataPutSz                  *prometheus.HistogramVec
@@ -37,6 +40,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		Description: "Bytes in the logical user records were received by the KPL core for put operations.",
 		Args:        []string{"stream"},
 		Type:        "histogram_vec",
+		Buckets:     sizeByteBuckets,
 	}
 
 	var kinesisRecordsPutCnt = &metric{
@@ -53,6 +57,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		Description: "Bytes in the Kinesis Data Streams records.",
 		Args:        []string{"stream"},
 		Type:        "histogram_vec",
+		Buckets:     sizeByteBuckets,
 	}
 
 	var errorsByCodeCnt = &metric{
@@ -85,6 +90,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		Description: "The time between a user record arriving at the KPL and leaving for the backend.",
 		Args:        []string{"stream"},
 		Type:        "histogram_vec",
+		Buckets:     timeMillisecondBuckets,
 	}
 
 	var requestTimeDur = &metric{
@@ -93,6 +99,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		Description: "The time it takes to perform PutRecordsRequests.",
 		Args:        []string{"stream"},
 		Type:        "histogram_vec",
+		Buckets:     timeMillisecondBuckets,
 	}
 
 	var userRecordsPerKinesisRecordSum = &metric{
@@ -101,6 +108,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		Description: "The number of logical user records aggregated into a single Kinesis Data Streams record.",
 		Args:        []string{"stream"},
 		Type:        "histogram_vec",
+		Buckets:     sizeByteBuckets,
 	}
 
 	var kinesisRecordsPerPutRecordsRequestSum = &metric{
@@ -109,6 +117,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		Description: "The number of Kinesis Data Streams records aggregated into a single PutRecordsRequest.",
 		Args:        []string{"stream"},
 		Type:        "histogram_vec",
+		Buckets:     sizeByteBuckets,
 	}
 
 	metricList := []*metric{
@@ -171,6 +180,7 @@ type metric struct {
 	Description     string
 	Type            string
 	Args            []string
+	Buckets         []float64
 }
 
 // nolint funlen
@@ -187,14 +197,15 @@ func newMetric(m *metric, subsystem string) prometheus.Collector {
 			m.Args,
 		)
 	case "histogram_vec":
-		metric = prometheus.NewHistogramVec(
-			prometheus.HistogramOpts{
-				Subsystem: subsystem,
-				Name:      m.Name,
-				Help:      m.Description,
-			},
-			m.Args,
-		)
+		opts := prometheus.HistogramOpts{
+			Subsystem: subsystem,
+			Name:      m.Name,
+			Help:      m.Description,
+		}
+		if len(m.Buckets) > 0 {
+			opts.Buckets = append(opts.Buckets, m.Buckets...)
+		}
+		metric = prometheus.NewHistogramVec(opts, m.Args)
 	}
 	return metric
 }

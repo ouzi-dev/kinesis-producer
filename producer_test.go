@@ -66,7 +66,7 @@ var testCases = []testCase{
 				},
 			}},
 		map[int][]string{
-			0: []string{"hello"},
+			0: {"hello"},
 		},
 	},
 	{
@@ -90,8 +90,8 @@ var testCases = []testCase{
 				},
 			}},
 		map[int][]string{
-			0: []string{"hello"},
-			1: []string{"world"},
+			0: {"hello"},
+			1: {"world"},
 		},
 	},
 	{
@@ -119,8 +119,8 @@ var testCases = []testCase{
 				},
 			}},
 		map[int][]string{
-			0: []string{"hello", "world"},
-			1: []string{"world"},
+			0: {"hello", "world"},
+			1: {"world"},
 		},
 	},
 	{
@@ -195,7 +195,7 @@ func TestNotify(t *testing.T) {
 	failed := 0
 	done := make(chan bool, 1)
 	go func() {
-		for _ = range p.NotifyFailures() {
+		for range p.NotifyFailures() {
 			failed++
 			wg.Done()
 		}
