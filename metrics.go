@@ -10,16 +10,16 @@ const systemName = "go_kinesis_producer"
 
 type prometheusMetrics struct {
 	userRecordsPutCnt                     *prometheus.CounterVec
-	userRecordsDataPutSz                  *prometheus.SummaryVec
+	userRecordsDataPutSz                  *prometheus.HistogramVec
 	kinesisRecordsPutCnt                  *prometheus.CounterVec
-	kinesisRecordsDataPutSz               *prometheus.SummaryVec
+	kinesisRecordsDataPutSz               *prometheus.HistogramVec
 	errorsByCodeCnt                       *prometheus.CounterVec
 	allErrorsCnt                          *prometheus.CounterVec
-	retriesPerRecordSum                   *prometheus.SummaryVec
+	retriesPerRecordSum                   *prometheus.HistogramVec
 	bufferingTimeDur                      *prometheus.HistogramVec
 	requestTimeDur                        *prometheus.HistogramVec
-	userRecordsPerKinesisRecordSum        *prometheus.SummaryVec
-	kinesisRecordsPerPutRecordsRequestSum *prometheus.SummaryVec
+	userRecordsPerKinesisRecordSum        *prometheus.HistogramVec
+	kinesisRecordsPerPutRecordsRequestSum *prometheus.HistogramVec
 }
 
 func getMetrics(logger Logger) *prometheusMetrics {
@@ -36,7 +36,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		Name:        "user_records_data_put_bytes",
 		Description: "Bytes in the logical user records were received by the KPL core for put operations.",
 		Args:        []string{"stream"},
-		Type:        "summary_vec",
+		Type:        "histogram_vec",
 	}
 
 	var kinesisRecordsPutCnt = &metric{
@@ -52,7 +52,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		Name:        "kinesis_records_data_put_bytes",
 		Description: "Bytes in the Kinesis Data Streams records.",
 		Args:        []string{"stream"},
-		Type:        "summary_vec",
+		Type:        "histogram_vec",
 	}
 
 	var errorsByCodeCnt = &metric{
@@ -76,7 +76,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		Name:        "retries_per_record",
 		Description: "Number of retries performed per kinesis record. Zero is emitted for records that succeed in one try.",
 		Args:        []string{"stream"},
-		Type:        "summary_vec",
+		Type:        "histogram_vec",
 	}
 
 	var bufferingTimeDur = &metric{
@@ -100,7 +100,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		Name:        "user_records_per_kinesis_record",
 		Description: "The number of logical user records aggregated into a single Kinesis Data Streams record.",
 		Args:        []string{"stream"},
-		Type:        "summary_vec",
+		Type:        "histogram_vec",
 	}
 
 	var kinesisRecordsPerPutRecordsRequestSum = &metric{
@@ -108,7 +108,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		Name:        "kinesis_records_per_put_records_request",
 		Description: "The number of Kinesis Data Streams records aggregated into a single PutRecordsRequest.",
 		Args:        []string{"stream"},
-		Type:        "summary_vec",
+		Type:        "histogram_vec",
 	}
 
 	metricList := []*metric{
@@ -137,25 +137,25 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		case userRecordsPutCnt:
 			p.userRecordsPutCnt = metric.(*prometheus.CounterVec)
 		case userRecordsDataPutSz:
-			p.userRecordsDataPutSz = metric.(*prometheus.SummaryVec)
+			p.userRecordsDataPutSz = metric.(*prometheus.HistogramVec)
 		case kinesisRecordsPutCnt:
 			p.kinesisRecordsPutCnt = metric.(*prometheus.CounterVec)
 		case kinesisRecordsDataPutSz:
-			p.kinesisRecordsDataPutSz = metric.(*prometheus.SummaryVec)
+			p.kinesisRecordsDataPutSz = metric.(*prometheus.HistogramVec)
 		case errorsByCodeCnt:
 			p.errorsByCodeCnt = metric.(*prometheus.CounterVec)
 		case allErrorsCnt:
 			p.allErrorsCnt = metric.(*prometheus.CounterVec)
 		case retriesPerRecordSum:
-			p.retriesPerRecordSum = metric.(*prometheus.SummaryVec)
+			p.retriesPerRecordSum = metric.(*prometheus.HistogramVec)
 		case bufferingTimeDur:
 			p.bufferingTimeDur = metric.(*prometheus.HistogramVec)
 		case requestTimeDur:
 			p.requestTimeDur = metric.(*prometheus.HistogramVec)
 		case userRecordsPerKinesisRecordSum:
-			p.userRecordsPerKinesisRecordSum = metric.(*prometheus.SummaryVec)
+			p.userRecordsPerKinesisRecordSum = metric.(*prometheus.HistogramVec)
 		case kinesisRecordsPerPutRecordsRequestSum:
-			p.kinesisRecordsPerPutRecordsRequestSum = metric.(*prometheus.SummaryVec)
+			p.kinesisRecordsPerPutRecordsRequestSum = metric.(*prometheus.HistogramVec)
 		}
 
 		metricDef.MetricCollector = metric
@@ -186,31 +186,12 @@ func newMetric(m *metric, subsystem string) prometheus.Collector {
 			},
 			m.Args,
 		)
-	case "gauge_vec":
-		metric = prometheus.NewGaugeVec(
-			prometheus.GaugeOpts{
-				Subsystem: subsystem,
-				Name:      m.Name,
-				Help:      m.Description,
-			},
-			m.Args,
-		)
 	case "histogram_vec":
 		metric = prometheus.NewHistogramVec(
 			prometheus.HistogramOpts{
 				Subsystem: subsystem,
 				Name:      m.Name,
 				Help:      m.Description,
-			},
-			m.Args,
-		)
-	case "summary_vec":
-		metric = prometheus.NewSummaryVec(
-			prometheus.SummaryOpts{
-				Subsystem:  subsystem,
-				Name:       m.Name,
-				Help:       m.Description,
-				Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 			},
 			m.Args,
 		)
