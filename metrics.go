@@ -27,7 +27,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		ID:          "userRecordsPutCnt",
 		Name:        "user_records_put_total",
 		Description: "Count of how many logical user records were received by the KPL core for put operations.",
-		Args:        []string{"StreamName"},
+		Args:        []string{"stream"},
 		Type:        "counter_vec",
 	}
 
@@ -35,7 +35,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		ID:          "userRecordsDataPutSz",
 		Name:        "user_records_data_put_bytes",
 		Description: "Bytes in the logical user records were received by the KPL core for put operations.",
-		Args:        []string{"StreamName"},
+		Args:        []string{"stream"},
 		Type:        "summary_vec",
 	}
 
@@ -43,7 +43,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		ID:          "kinesisRecordsPutCnt",
 		Name:        "kinesis_records_put_total",
 		Description: "Count of how many Kinesis Data Streams records were put successfully (each Kinesis Data Streams record can contain multiple user records).",
-		Args:        []string{"StreamName", "ShardId"},
+		Args:        []string{"stream", "shard"},
 		Type:        "counter_vec",
 	}
 
@@ -51,7 +51,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		ID:          "kinesisRecordsDataPutSz",
 		Name:        "kinesis_records_data_put_bytes",
 		Description: "Bytes in the Kinesis Data Streams records.",
-		Args:        []string{"StreamName"},
+		Args:        []string{"stream"},
 		Type:        "summary_vec",
 	}
 
@@ -59,7 +59,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		ID:          "errorsByCodeCnt",
 		Name:        "errors_by_code_total",
 		Description: "Count of each type of error code.",
-		Args:        []string{"StreamName", "ErrorCode"},
+		Args:        []string{"stream", "code"},
 		Type:        "counter_vec",
 	}
 
@@ -67,7 +67,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		ID:          "allErrorsCnt",
 		Name:        "errors_total",
 		Description: "This is triggered by the same errors as Errors by Code, but does not distinguish between types.",
-		Args:        []string{"StreamName"},
+		Args:        []string{"stream"},
 		Type:        "counter_vec",
 	}
 
@@ -75,7 +75,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		ID:          "retriesPerRecordSum",
 		Name:        "retries_per_record",
 		Description: "Number of retries performed per kinesis record. Zero is emitted for records that succeed in one try.",
-		Args:        []string{"StreamName"},
+		Args:        []string{"stream"},
 		Type:        "summary_vec",
 	}
 
@@ -83,7 +83,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		ID:          "bufferingTimeDur",
 		Name:        "buffering_time_milliseconds",
 		Description: "The time between a user record arriving at the KPL and leaving for the backend.",
-		Args:        []string{"StreamName"},
+		Args:        []string{"stream"},
 		Type:        "histogram_vec",
 	}
 
@@ -91,7 +91,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		ID:          "requestTimeDur",
 		Name:        "request_time_milliseconds",
 		Description: "The time it takes to perform PutRecordsRequests.",
-		Args:        []string{"StreamName"},
+		Args:        []string{"stream"},
 		Type:        "histogram_vec",
 	}
 
@@ -99,7 +99,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		ID:          "userRecordsPerKinesisRecordSum",
 		Name:        "user_records_per_kinesis_record",
 		Description: "The number of logical user records aggregated into a single Kinesis Data Streams record.",
-		Args:        []string{"StreamName"},
+		Args:        []string{"stream"},
 		Type:        "summary_vec",
 	}
 
@@ -107,7 +107,7 @@ func getMetrics(logger Logger) *prometheusMetrics {
 		ID:          "kinesisRecordsPerPutRecordsRequestSum",
 		Name:        "kinesis_records_per_put_records_request",
 		Description: "The number of Kinesis Data Streams records aggregated into a single PutRecordsRequest.",
-		Args:        []string{"StreamName"},
+		Args:        []string{"stream"},
 		Type:        "summary_vec",
 	}
 
