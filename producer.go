@@ -148,9 +148,7 @@ func (p *Producer) Stop() {
 	p.Logger.Info("stopping producer", LogValue{"backlog", len(p.records)})
 
 	// drain
-	numRecords := p.aggregator.Count()
 	if record, ok := p.drainIfNeed(); ok {
-		p.metrics.userRecordsPerKinesisRecordSum.WithLabelValues(p.Config.StreamName).Observe(float64(numRecords))
 		p.records <- record
 	}
 	p.done <- struct{}{}
@@ -236,6 +234,7 @@ func (p *Producer) drainIfNeed() (*kinesis.PutRecordsRequestEntry, bool) {
 	needToDrain := p.aggregator.Size() > 0
 	p.RUnlock()
 	if needToDrain {
+		p.metrics.userRecordsPerKinesisRecordSum.WithLabelValues(p.Config.StreamName).Observe(float64(p.aggregator.Count()))
 		p.Lock()
 		record, err := p.aggregator.Drain()
 		p.Unlock()
