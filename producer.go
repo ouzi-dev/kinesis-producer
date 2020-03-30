@@ -91,7 +91,7 @@ func (p *Producer) Put(data []byte, partitionKey string) error {
 		}
 	} else {
 		p.Lock()
-		needToDrain := nbytes+p.aggregator.Size()+md5.Size+len(magicNumber)+partitionKeyIndexSize > maxRecordSize || p.aggregator.Count() >= p.AggregateBatchCount
+		needToDrain := nbytes+p.aggregator.Size()+md5.Size+len(magicNumber)+partitionKeyIndexSize > p.AggregateBatchSize || p.aggregator.Count() >= p.AggregateBatchCount
 		var (
 			record *kinesis.PutRecordsRequestEntry
 			err    error
@@ -176,9 +176,9 @@ func (p *Producer) loop() {
 	tick := time.NewTicker(p.FlushInterval)
 
 	flush := func(msg string) {
+		p.semaphore.acquire()
 		elapsed := float64(time.Since(start)) / float64(time.Millisecond)
 		p.metrics.bufferingTimeDur.WithLabelValues(p.Config.StreamName).Observe(elapsed)
-		p.semaphore.acquire()
 		go p.flush(buf, msg)
 		buf = nil
 		size = 0
@@ -259,10 +259,15 @@ func (p *Producer) flush(records []*kinesis.PutRecordsRequestEntry, reason strin
 	numRetries := 0
 	numRecords := len(records)
 
+	if numRecords == 0 {
+		p.Logger.Info("no records to flush")
+		return
+	}
+
 	for {
-		p.Logger.Info("flushing records", LogValue{"reason", reason}, LogValue{"records", len(records)})
+		p.Logger.Info("flushing records", LogValue{"reason", reason}, LogValue{"records", numRecords})
 		start := time.Now()
-		p.metrics.kinesisRecordsPerPutRecordsRequestSum.WithLabelValues(p.Config.StreamName).Observe(float64(len(records)))
+		p.metrics.kinesisRecordsPerPutRecordsRequestSum.WithLabelValues(p.Config.StreamName).Observe(float64(numRecords))
 		out, err := p.Client.PutRecords(&kinesis.PutRecordsInput{
 			StreamName: &p.StreamName,
 			Records:    records,
