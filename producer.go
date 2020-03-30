@@ -93,12 +93,11 @@ func (p *Producer) Put(data []byte, partitionKey string) error {
 		p.Lock()
 		needToDrain := nbytes+p.aggregator.Size()+md5.Size+len(magicNumber)+partitionKeyIndexSize > maxRecordSize || p.aggregator.Count() >= p.AggregateBatchCount
 		var (
-			record     *kinesis.PutRecordsRequestEntry
-			err        error
-			numRecords int
+			record *kinesis.PutRecordsRequestEntry
+			err    error
 		)
 		if needToDrain {
-			numRecords = p.aggregator.Count()
+			p.metrics.userRecordsPerKinesisRecordSum.WithLabelValues(p.Config.StreamName).Observe(float64(p.aggregator.Count()))
 			if record, err = p.aggregator.Drain(); err != nil {
 				p.Logger.Error("drain aggregator", err)
 			}
@@ -109,7 +108,6 @@ func (p *Producer) Put(data []byte, partitionKey string) error {
 		// we did it, because the "send" operation blocks when the backlog is full
 		// and this can cause deadlock(when we never release the lock)
 		if needToDrain && record != nil {
-			p.metrics.userRecordsPerKinesisRecordSum.WithLabelValues(p.Config.StreamName).Observe(float64(numRecords))
 			p.records <- record
 		}
 	}
