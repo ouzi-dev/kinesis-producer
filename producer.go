@@ -116,7 +116,7 @@ func (p *Producer) Put(data []byte, partitionKey string) error {
 
 // Failure record type
 type FailureRecord struct {
-	error
+	Error        error
 	Data         []byte
 	PartitionKey string
 }
